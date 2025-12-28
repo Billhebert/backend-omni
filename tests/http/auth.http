@@ -1,0 +1,80 @@
+### OMNI Platform - Auth API Tests
+### Base URL
+@baseUrl = http://localhost:3001
+@contentType = application/json
+
+### Variables (UPDATE THESE!)
+@companyId = f72f2d1e-2297-400b-80cc-bfab8c114622
+@email = admin@demo.omni.com
+@password = newpassword123
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
+@refreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImlhdCI6MTc2Njk1MTU1NCwiZXhwIjoxNzY3NTU2MzU0fQ.rdTWZnWhm-6LBFMSaZj5s8buemc_8Y-KkzubZiPBelg
+
+################################################################################
+# 1. REGISTER NEW USER
+################################################################################
+
+POST {{baseUrl}}/api/auth/register
+Content-Type: {{contentType}}
+
+{
+  "email": "newuser@demo.omni.com",
+  "password": "password123",
+  "name": "New User",
+  "companyId": "{{companyId}}"
+}
+
+################################################################################
+# 2. LOGIN
+################################################################################
+
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "companyId": "{{companyId}}"
+}
+
+### Extract token from login response
+# Copy the "token" from response and update @token variable above
+
+################################################################################
+# 3. REFRESH TOKEN
+################################################################################
+
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: {{contentType}}
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+################################################################################
+# 4. GET CURRENT USER
+################################################################################
+
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+################################################################################
+# 5. CHANGE PASSWORD
+################################################################################
+
+POST {{baseUrl}}/api/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "oldPassword": "{{password}}",
+  "newPassword": "123456"
+}
+
+################################################################################
+# 6. LOGOUT (if implemented)
+################################################################################
+
+POST {{baseUrl}}/api/auth/logout
+Authorization: Bearer {{token}}

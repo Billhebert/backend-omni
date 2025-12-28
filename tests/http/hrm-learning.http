@@ -1,0 +1,164 @@
+### OMNI Platform - HRM Learning API Tests
+### Base URL
+@baseUrl = http://localhost:3001
+@contentType = application/json
+
+### Auth (UPDATE AFTER LOGIN!)
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
+
+### IDs (UPDATE AFTER CREATING RESOURCES!)
+@learningPathId = 81e791c3-1115-481a-bc25-f773229cbb76
+@enrollmentId = bb027ebc-a9e1-4b8a-a8d2-7be5733397cd
+
+################################################################################
+# 1. CREATE LEARNING PATH
+################################################################################
+
+# @name createPath
+POST {{baseUrl}}/api/hrm/learning-paths
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Advanced TypeScript",
+  "description": "Master TypeScript from basics to advanced",
+  "category": "technical",
+  "difficulty": "advanced",
+  "estimatedHours": 20,
+  "targetSkills": [],
+  "items": [
+    {
+      "order": 1,
+      "contentType": "video",
+      "title": "TypeScript Fundamentals",
+      "description": "Learn the basics",
+      "contentUrl": "https://example.com/video1",
+      "estimatedMinutes": 60,
+      "required": true
+    },
+    {
+      "order": 2,
+      "contentType": "article",
+      "title": "Advanced Types",
+      "description": "Generics, Utility Types, etc",
+      "contentUrl": "https://example.com/article1",
+      "estimatedMinutes": 45,
+      "required": true
+    }
+  ]
+}
+
+################################################################################
+# 2. LIST ALL LEARNING PATHS
+################################################################################
+
+GET {{baseUrl}}/api/hrm/learning-paths
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/hrm/learning-paths?category=technical&difficulty=intermediate&isActive=true
+Authorization: Bearer {{token}}
+
+################################################################################
+# 3. GET LEARNING PATH BY ID
+################################################################################
+
+GET {{baseUrl}}/api/hrm/learning-paths/{{learningPathId}}
+Authorization: Bearer {{token}}
+
+################################################################################
+# 4. UPDATE LEARNING PATH
+################################################################################
+
+PATCH {{baseUrl}}/api/hrm/learning-paths/{{learningPathId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "title": "Advanced TypeScript - Updated",
+  "estimatedHours": 25
+}
+
+################################################################################
+# 5. DELETE LEARNING PATH
+################################################################################
+
+DELETE {{baseUrl}}/api/hrm/learning-paths/{{learningPathId}}
+Authorization: Bearer {{token}}
+
+################################################################################
+# 6. GET LEARNING PATH ANALYTICS
+################################################################################
+
+GET {{baseUrl}}/api/hrm/learning-paths/{{learningPathId}}/analytics
+Authorization: Bearer {{token}}
+
+################################################################################
+# 7. ENROLL IN LEARNING PATH
+################################################################################
+
+# @name enroll
+POST {{baseUrl}}/api/hrm/enrollments
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "pathId": "{{learningPathId}}"
+}
+
+################################################################################
+# 8. GET MY ENROLLMENTS
+################################################################################
+
+GET {{baseUrl}}/api/hrm/my-enrollments
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/hrm/my-enrollments?status=in_progress
+Authorization: Bearer {{token}}
+
+################################################################################
+# 9. UPDATE PROGRESS
+################################################################################
+
+POST {{baseUrl}}/api/hrm/progress
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "enrollmentId": "{{enrollmentId}}",
+  "itemId": "item-id-from-path",
+  "completed": true,
+  "timeSpentMinutes": 60,
+  "notes": "Great lesson!"
+}
+
+################################################################################
+# 10. GET MY PROGRESS FOR A PATH
+################################################################################
+
+GET {{baseUrl}}/api/hrm/learning-paths/{{learningPathId}}/my-progress
+Authorization: Bearer {{token}}
+
+################################################################################
+# 11. ABANDON ENROLLMENT
+################################################################################
+
+POST {{baseUrl}}/api/hrm/enrollments/{{learningPathId}}/abandon
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "reason": "Not relevant to my current role"
+}
+
+################################################################################
+# 12. GET LEARNING LEADERBOARD
+################################################################################
+
+GET {{baseUrl}}/api/hrm/leaderboard
+Authorization: Bearer {{token}}
+
+### With time period
+GET {{baseUrl}}/api/hrm/leaderboard?period=month
+Authorization: Bearer {{token}}

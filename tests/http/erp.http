@@ -1,0 +1,245 @@
+### OMNI Platform - ERP API Tests
+### Base URL
+@baseUrl = http://localhost:3001
+@contentType = application/json
+
+### Auth
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
+
+### IDs
+@invoiceId = dc04cb78-0420-464c-bca5-149a6f9c6ffd
+@expenseId = b93965e2-a6a7-4d99-bf23-154e485081ed
+@productId = 081b9423-4356-4313-9f53-dda4a3296ff6
+
+################################################################################
+# FINANCE - INVOICES
+################################################################################
+
+### 1. CREATE INVOICE
+
+# @name createInvoice
+POST {{baseUrl}}/api/erp/invoices
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "type": "receivable",
+  "contactId": "contact-id-here",
+  "invoiceNumber": "INV-2025-001",
+  "issueDate": "2025-01-01",
+  "dueDate": "2025-01-31",
+  "currency": "USD",
+  "items": [
+    {
+      "description": "Software License - Annual",
+      "quantity": 10,
+      "unitPrice": 500,
+      "taxRate": 0,
+      "total": 5000
+    },
+    {
+      "description": "Support & Maintenance",
+      "quantity": 1,
+      "unitPrice": 1000,
+      "taxRate": 0,
+      "total": 1000
+    }
+  ],
+  "subtotal": 6000,
+  "tax": 0,
+  "total": 6000,
+  "notes": "Payment due within 30 days"
+}
+
+### 2. LIST INVOICES
+
+GET {{baseUrl}}/api/erp/invoices
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/erp/invoices?status=pending&type=receivable
+Authorization: Bearer {{token}}
+
+### 3. GET INVOICE BY ID
+
+GET {{baseUrl}}/api/erp/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+
+### 4. UPDATE INVOICE
+
+PATCH {{baseUrl}}/api/erp/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "status": "paid",
+  "paidDate": "2025-01-15",
+  "paymentMethod": "bank_transfer"
+}
+
+### 5. DELETE INVOICE
+
+DELETE {{baseUrl}}/api/erp/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+
+################################################################################
+# FINANCE - EXPENSES
+################################################################################
+
+### 6. CREATE EXPENSE
+
+# @name createExpense
+POST {{baseUrl}}/api/erp/expenses
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "category": "travel",
+  "amount": 250.50,
+  "currency": "USD",
+  "date": "2025-01-10",
+  "vendor": "Delta Airlines",
+  "description": "Flight to client meeting",
+  "receipt": "receipt-url-here",
+  "paymentMethod": "corporate_card",
+  "reimbursable": true
+}
+
+### 7. LIST EXPENSES
+
+GET {{baseUrl}}/api/erp/expenses
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/erp/expenses?status=pending&category=travel
+Authorization: Bearer {{token}}
+
+### 8. APPROVE EXPENSE
+
+POST {{baseUrl}}/api/erp/expenses/{{expenseId}}/approve
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "notes": "Approved for reimbursement"
+}
+
+### 9. REJECT EXPENSE
+
+POST {{baseUrl}}/api/erp/expenses/{{expenseId}}/reject
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "reason": "Missing receipt"
+}
+
+### 10. GET FINANCIAL SUMMARY
+
+GET {{baseUrl}}/api/erp/finance/summary
+Authorization: Bearer {{token}}
+
+### With period
+GET {{baseUrl}}/api/erp/finance/summary?period=2025-01&type=month
+Authorization: Bearer {{token}}
+
+################################################################################
+# INVENTORY - PRODUCTS
+################################################################################
+
+### 11. CREATE PRODUCT
+
+# @name createProduct
+POST {{baseUrl}}/api/erp/products
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "sku": "PROD-001",
+  "name": "Enterprise Software License",
+  "description": "Annual license for up to 100 users",
+  "category": "software",
+  "price": 500,
+  "cost": 50,
+  "currency": "USD",
+  "stock": 1000,
+  "minStock": 100,
+  "unit": "license",
+  "isActive": true
+}
+
+### 12. LIST PRODUCTS
+
+GET {{baseUrl}}/api/erp/products
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/erp/products?category=software&isActive=true
+Authorization: Bearer {{token}}
+
+### 13. GET PRODUCT BY ID
+
+GET {{baseUrl}}/api/erp/products/{{productId}}
+Authorization: Bearer {{token}}
+
+### 14. UPDATE PRODUCT
+
+PATCH {{baseUrl}}/api/erp/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "price": 550,
+  "stock": 950
+}
+
+### 15. UPDATE STOCK (IN)
+
+POST {{baseUrl}}/api/erp/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "type": "in",
+  "quantity": 100,
+  "reason": "Purchase order received"
+}
+
+### 16. UPDATE STOCK (OUT)
+
+POST {{baseUrl}}/api/erp/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "type": "out",
+  "quantity": 50,
+  "reason": "Sale to customer"
+}
+
+### 17. STOCK ADJUSTMENT
+
+POST {{baseUrl}}/api/erp/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "type": "adjustment",
+  "quantity": 5,
+  "reason": "Inventory count discrepancy"
+}
+
+### 18. GET LOW STOCK PRODUCTS
+
+GET {{baseUrl}}/api/erp/products/low-stock
+Authorization: Bearer {{token}}
+
+### 19. GET STOCK MOVEMENTS HISTORY
+
+GET {{baseUrl}}/api/erp/products/{{productId}}/movements
+Authorization: Bearer {{token}}
+
+### 20. DELETE PRODUCT
+
+DELETE {{baseUrl}}/api/erp/products/{{productId}}
+Authorization: Bearer {{token}}

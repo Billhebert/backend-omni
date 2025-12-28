@@ -1,0 +1,175 @@
+### OMNI Platform - CRM API Tests
+### Base URL
+@baseUrl = http://localhost:3001
+@contentType = application/json
+
+### Auth
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBmY2IxMWEwLTI1ZjctNDI5Zi1iNTk3LTU4OWY5ZWE0NzhhNCIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzY2OTQ3NDgzfQ.UyaFMJcvifqVgvnNp3Ac9KSdISAnPaoM6rxjc5JBGG8
+
+### IDs
+@contactId = 97b42de7-68e3-4489-ad45-8812ab8d2a1a
+@dealId = 4b4fe1da-10c4-4e55-b685-a666247c9074
+
+################################################################################
+# CONTACTS
+################################################################################
+
+### 1. CREATE CONTACT
+
+# @name createContact
+POST {{baseUrl}}/api/crm/contacts
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone": "+1234567890",
+  "company": "Acme Corp",
+  "position": "CTO",
+  "source": "website",
+  "status": "lead",
+  "tags": ["enterprise", "tech"],
+  "customFields": {
+    "industry": "Technology",
+    "employees": "500+"
+  }
+}
+
+### 2. LIST CONTACTS
+
+GET {{baseUrl}}/api/crm/contacts
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/crm/contacts?status=lead&source=website
+Authorization: Bearer {{token}}
+
+### 3. GET CONTACT BY ID
+
+GET {{baseUrl}}/api/crm/contacts/{{contactId}}
+Authorization: Bearer {{token}}
+
+### 4. UPDATE CONTACT
+
+PATCH {{baseUrl}}/api/crm/contacts/{{contactId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "status": "qualified",
+  "tags": ["enterprise", "tech", "hot-lead"]
+}
+
+### 5. DELETE CONTACT
+
+DELETE {{baseUrl}}/api/crm/contacts/{{contactId}}
+Authorization: Bearer {{token}}
+
+################################################################################
+# DEALS
+################################################################################
+
+### 6. CREATE DEAL
+
+# @name createDeal
+POST {{baseUrl}}/api/crm/deals
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "contactId": "{{contactId}}",
+  "title": "Enterprise License - Acme Corp",
+  "value": 50000,
+  "currency": "USD",
+  "stage": "qualified",
+  "probability": 60,
+  "expectedCloseDate": "2025-03-31",
+  "products": [
+    {
+      "productId": "prod-1",
+      "quantity": 10,
+      "price": 5000
+    }
+  ],
+  "notes": "Initial contact via website form"
+}
+
+### 7. LIST DEALS
+
+GET {{baseUrl}}/api/crm/deals
+Authorization: Bearer {{token}}
+
+### With filters
+GET {{baseUrl}}/api/crm/deals?stage=negotiation
+Authorization: Bearer {{token}}
+
+### 8. GET DEAL BY ID
+
+GET {{baseUrl}}/api/crm/deals/{{dealId}}
+Authorization: Bearer {{token}}
+
+### 9. UPDATE DEAL
+
+PATCH {{baseUrl}}/api/crm/deals/{{dealId}}
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "stage": "negotiation",
+  "probability": 80,
+  "value": 55000
+}
+
+### 10. MOVE DEAL TO NEXT STAGE
+
+POST {{baseUrl}}/api/crm/deals/{{dealId}}/move-stage
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "stage": "won"
+}
+
+### 11. GET PIPELINE OVERVIEW
+
+GET {{baseUrl}}/api/crm/pipeline
+Authorization: Bearer {{token}}
+
+### 12. GET DEALS BY OWNER
+
+GET {{baseUrl}}/api/crm/deals?ownerId=user-id-here
+Authorization: Bearer {{token}}
+
+################################################################################
+# INTERACTIONS
+################################################################################
+
+### 13. CREATE INTERACTION
+
+POST {{baseUrl}}/api/crm/interactions
+Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+
+{
+  "contactId": "{{contactId}}",
+  "dealId": "{{dealId}}",
+  "type": "call",
+  "direction": "outbound",
+  "subject": "Follow-up call",
+  "notes": "Discussed pricing and timeline. Very interested.",
+  "duration": 1800,
+  "outcome": "positive",
+  "nextAction": "Send proposal",
+  "nextActionDate": "2025-01-15"
+}
+
+### 14. LIST INTERACTIONS FOR CONTACT
+
+GET {{baseUrl}}/api/crm/contacts/{{contactId}}/interactions
+Authorization: Bearer {{token}}
+
+### 15. LIST INTERACTIONS FOR DEAL
+
+GET {{baseUrl}}/api/crm/deals/{{dealId}}/interactions
+Authorization: Bearer {{token}}

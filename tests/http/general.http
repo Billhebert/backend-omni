@@ -1,0 +1,49 @@
+### OMNI Platform - General API Tests
+### Base URL
+@baseUrl = http://localhost:3001
+
+################################################################################
+# HEALTH & STATUS
+################################################################################
+
+### 1. Health Check
+GET {{baseUrl}}/health
+
+### 2. API Documentation (Swagger)
+# Open in browser: http://localhost:3001/docs
+
+################################################################################
+# QUICK START WORKFLOW
+################################################################################
+
+### STEP 1: Get Company ID
+# Open Prisma Studio: npx prisma studio
+# Go to 'company' table and copy the ID
+
+### STEP 2: Login
+# @name quickLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@demo.omni.com",
+  "password": "admin123",
+  "companyId": "YOUR_COMPANY_ID_HERE"
+}
+
+### STEP 3: Copy token from response above
+# Update @token variable in other .http files
+
+### STEP 4: Test authenticated endpoint
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer YOUR_TOKEN_HERE
+
+################################################################################
+# TIPS
+################################################################################
+
+# 1. Install VS Code extension: "REST Client"
+# 2. Click "Send Request" above each request
+# 3. Use variables (@baseUrl, @token) to avoid repetition
+# 4. Update @token after login
+# 5. Use @name to reference responses in other requests
