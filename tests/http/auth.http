@@ -6,7 +6,7 @@
 ### Variables (UPDATE THESE!)
 @companyId = f72f2d1e-2297-400b-80cc-bfab8c114622
 @email = admin@demo.omni.com
-@password = newpassword123
+@password = 123456
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
 @refreshToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImlhdCI6MTc2Njk1MTU1NCwiZXhwIjoxNzY3NTU2MzU0fQ.rdTWZnWhm-6LBFMSaZj5s8buemc_8Y-KkzubZiPBelg
 

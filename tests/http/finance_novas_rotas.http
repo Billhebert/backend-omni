@@ -1,0 +1,646 @@
+### 💰 FINANCE & INVOICES - COMPLETE HTTP TESTS
+### Arquivo completo para testar TODAS as funcionalidades
+### Salve como: tests/http/finance-complete.http
+
+# ============================================
+# VARIÁVEIS
+# ============================================
+@baseUrl = http://localhost:3001/api/erp
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
+@invoiceId = a83bb694-57f2-4414-bc76-ff68aea4db91
+@contactId = 
+@dealId = 
+
+# ============================================
+# SEÇÃO 1: CRUD BÁSICO DE INVOICES
+# ============================================
+
+### 1.1 - CREATE INVOICE (RECEIVABLE - A RECEBER)
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "INV-2024-001",
+  "type": "receivable",
+  "status": "draft",
+  "issueDate": "2024-12-28",
+  "dueDate": "2025-01-28",
+  "contactId": null,
+  "dealId": null,
+  "paymentMethod": "bank_transfer",
+  "notes": "Serviços de desenvolvimento Q4 2024",
+  "items": [
+    {
+      "description": "Desenvolvimento Backend - 40h",
+      "quantity": 40,
+      "unitPrice": 150.00,
+      "taxRate": 10,
+      "discountRate": 5
+    },
+    {
+      "description": "Desenvolvimento Frontend - 30h",
+      "quantity": 30,
+      "unitPrice": 120.00,
+      "taxRate": 10,
+      "discountRate": 0
+    }
+  ]
+}
+
+###
+
+### 1.2 - CREATE INVOICE (PAYABLE - A PAGAR)
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "BILL-2024-001",
+  "type": "payable",
+  "status": "sent",
+  "issueDate": "2024-12-01",
+  "dueDate": "2024-12-31",
+  "notes": "Fornecedor de materiais",
+  "items": [
+    {
+      "description": "Material de escritório",
+      "quantity": 50,
+      "unitPrice": 25.00,
+      "taxRate": 18,
+      "discountRate": 10
+    }
+  ]
+}
+
+###
+
+### 1.3 - CREATE INVOICE (FORMATO ALTERNATIVO - itemsCreate)
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "invoiceNumber": "INV-2024-002",
+  "type": "receivable",
+  "dueDate": "2025-02-15",
+  "itemsCreate": [
+    {
+      "description": "Consultoria estratégica",
+      "quantity": 8,
+      "unitPrice": 500.00
+    }
+  ]
+}
+
+###
+
+### 1.4 - LIST ALL INVOICES
+GET {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+
+###
+
+### 1.5 - LIST INVOICES (FILTERED - RECEIVABLE ONLY)
+GET {{baseUrl}}/invoices?type=receivable
+Authorization: Bearer {{token}}
+
+###
+
+### 1.6 - LIST INVOICES (FILTERED - PAYABLE ONLY)
+GET {{baseUrl}}/invoices?type=payable
+Authorization: Bearer {{token}}
+
+###
+
+### 1.7 - LIST INVOICES (FILTERED - BY STATUS)
+GET {{baseUrl}}/invoices?status=draft
+Authorization: Bearer {{token}}
+
+###
+
+### 1.8 - GET ONE INVOICE
+# Substitua {{invoiceId}} pelo ID retornado no create
+GET {{baseUrl}}/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 1.9 - UPDATE INVOICE (BASIC UPDATE)
+PATCH {{baseUrl}}/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "notes": "Notas atualizadas - Prazo estendido para 60 dias",
+  "dueDate": "2025-02-28"
+}
+
+###
+
+### 1.10 - UPDATE INVOICE (CHANGE STATUS)
+PATCH {{baseUrl}}/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "draft"
+}
+
+###
+
+### 1.11 - DELETE INVOICE
+# ⚠️ CUIDADO: Isso vai deletar a invoice permanentemente
+DELETE {{baseUrl}}/invoices/{{invoiceId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 2: AÇÕES ESPECIAIS DE INVOICES
+# ============================================
+
+### 2.1 - SEND INVOICE (draft → sent)
+# Pré-requisito: Invoice deve estar em status "draft"
+POST {{baseUrl}}/invoices/{{invoiceId}}/send
+Authorization: Bearer {{token}}
+
+###
+
+### 2.2 - MARK AS PAID (PAGAMENTO TOTAL)
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paidAmount": 10000.00,
+  "paidDate": "2024-12-28",
+  "paymentMethod": "bank_transfer"
+}
+
+###
+
+### 2.3 - MARK AS PAID (PAGAMENTO PARCIAL)
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paidAmount": 5000.00,
+  "paidDate": "2024-12-28",
+  "paymentMethod": "credit_card"
+}
+
+###
+
+### 2.4 - MARK AS PAID (COM PIX)
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paidAmount": 9240.00,
+  "paidDate": "2024-12-28",
+  "paymentMethod": "pix"
+}
+
+###
+
+### 2.5 - CANCEL INVOICE (COM MOTIVO)
+POST {{baseUrl}}/invoices/{{invoiceId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Cliente cancelou o contrato antes do vencimento"
+}
+
+###
+
+### 2.6 - CANCEL INVOICE (SEM MOTIVO)
+POST {{baseUrl}}/invoices/{{invoiceId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+###
+
+### 2.7 - CHECK OVERDUE INVOICES
+# Marca todas as invoices vencidas como "overdue"
+# Útil para rodar em cron job diário
+POST {{baseUrl}}/invoices/check-overdue
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 3: RELATÓRIOS E ESTATÍSTICAS
+# ============================================
+
+### 3.1 - GET STATISTICS (TODAS)
+GET {{baseUrl}}/invoices/stats
+Authorization: Bearer {{token}}
+
+###
+
+### 3.2 - GET STATISTICS (RECEIVABLE)
+GET {{baseUrl}}/invoices/stats?type=receivable
+Authorization: Bearer {{token}}
+
+###
+
+### 3.3 - GET STATISTICS (PAYABLE)
+GET {{baseUrl}}/invoices/stats?type=payable
+Authorization: Bearer {{token}}
+
+###
+
+### 3.4 - FINANCIAL SUMMARY (COMPLETO)
+GET {{baseUrl}}/finance/summary
+Authorization: Bearer {{token}}
+
+###
+
+### 3.5 - FINANCIAL SUMMARY (COM PERÍODO)
+GET {{baseUrl}}/finance/summary?from=2024-01-01&to=2024-12-31
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 4: WORKFLOWS COMPLETOS
+# ============================================
+
+### 4.1 - WORKFLOW COMPLETO - RECEIVABLE
+# Passo 1: Criar invoice em draft
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "WF-001",
+  "type": "receivable",
+  "status": "draft",
+  "dueDate": "2025-01-30",
+  "items": [
+    {
+      "description": "Projeto completo de desenvolvimento",
+      "quantity": 100,
+      "unitPrice": 100.00,
+      "taxRate": 10
+    }
+  ]
+}
+
+###
+
+# Passo 2: Enviar invoice
+POST {{baseUrl}}/invoices/{{invoiceId}}/send
+Authorization: Bearer {{token}}
+
+###
+
+# Passo 3: Cliente paga parcialmente
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paidAmount": 5000.00,
+  "paymentMethod": "pix"
+}
+
+###
+
+# Passo 4: Cliente paga o resto
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paidAmount": 11000.00,
+  "paymentMethod": "bank_transfer"
+}
+
+###
+
+# Passo 5: Ver estatísticas atualizadas
+GET {{baseUrl}}/invoices/stats?type=receivable
+Authorization: Bearer {{token}}
+
+###
+
+### 4.2 - WORKFLOW COMPLETO - PAYABLE
+# Passo 1: Criar conta a pagar
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "WF-PAY-001",
+  "type": "payable",
+  "status": "sent",
+  "dueDate": "2025-01-15",
+  "notes": "Fornecedor XYZ - Mensalidade",
+  "items": [
+    {
+      "description": "Serviço de cloud computing",
+      "quantity": 1,
+      "unitPrice": 2500.00
+    }
+  ]
+}
+
+###
+
+# Passo 2: Pagar a conta
+POST {{baseUrl}}/invoices/{{invoiceId}}/pay
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paidAmount": 2500.00,
+  "paymentMethod": "debit_card"
+}
+
+###
+
+# Passo 3: Ver estatísticas de contas a pagar
+GET {{baseUrl}}/invoices/stats?type=payable
+Authorization: Bearer {{token}}
+
+###
+
+### 4.3 - WORKFLOW - CANCELAMENTO
+# Passo 1: Criar invoice
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "WF-CANCEL-001",
+  "type": "receivable",
+  "status": "draft",
+  "dueDate": "2025-02-01",
+  "items": [
+    {
+      "description": "Projeto que será cancelado",
+      "quantity": 1,
+      "unitPrice": 5000.00
+    }
+  ]
+}
+
+###
+
+# Passo 2: Enviar invoice
+POST {{baseUrl}}/invoices/{{invoiceId}}/send
+Authorization: Bearer {{token}}
+
+###
+
+# Passo 3: Cancelar (cliente desistiu)
+POST {{baseUrl}}/invoices/{{invoiceId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Cliente desistiu do projeto por motivos internos"
+}
+
+###
+
+# ============================================
+# SEÇÃO 5: TESTES DE ERRO (VALIDAÇÕES)
+# ============================================
+
+### 5.1 - ERRO: Criar invoice sem número
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "receivable",
+  "items": [
+    {
+      "description": "Teste",
+      "quantity": 1,
+      "unitPrice": 100
+    }
+  ]
+}
+
+# Esperado: Erro "Invoice number is required"
+
+###
+
+### 5.2 - ERRO: Criar invoice sem items
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "ERROR-001",
+  "type": "receivable",
+  "items": []
+}
+
+# Esperado: Erro sobre items vazios
+
+###
+
+### 5.3 - ERRO: Tentar enviar invoice que não é draft
+# Pré-requisito: Invoice deve estar em status "sent" ou "paid"
+POST {{baseUrl}}/invoices/{{invoiceId}}/send
+Authorization: Bearer {{token}}
+
+# Esperado: "Only draft invoices can be sent"
+
+###
+
+### 5.4 - ERRO: Cancelar invoice paga
+# Pré-requisito: Invoice deve estar paga
+POST {{baseUrl}}/invoices/{{invoiceId}}/cancel
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "reason": "Tentando cancelar invoice paga"
+}
+
+# Esperado: "Cannot cancel a paid invoice"
+
+###
+
+### 5.5 - ERRO: Buscar invoice que não existe
+GET {{baseUrl}}/invoices/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+# Esperado: 404 "Invoice not found"
+
+###
+
+### 5.6 - ERRO: Sem autenticação
+GET {{baseUrl}}/invoices
+
+# Esperado: 401 Unauthorized
+
+###
+
+# ============================================
+# SEÇÃO 6: CASOS DE USO REAIS
+# ============================================
+
+### 6.1 - CASO 1: Faturamento mensal de cliente
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "MENSAL-2024-12",
+  "type": "receivable",
+  "status": "draft",
+  "dueDate": "2025-01-10",
+  "notes": "Faturamento mensal - Cliente ABC - Dezembro/2024",
+  "items": [
+    {
+      "description": "Plano Premium - 1 mês",
+      "quantity": 1,
+      "unitPrice": 1999.00,
+      "taxRate": 10
+    },
+    {
+      "description": "Usuários adicionais (5 users)",
+      "quantity": 5,
+      "unitPrice": 99.00,
+      "taxRate": 10
+    },
+    {
+      "description": "Suporte técnico",
+      "quantity": 1,
+      "unitPrice": 500.00,
+      "taxRate": 10
+    }
+  ]
+}
+
+###
+
+### 6.2 - CASO 2: Nota de despesa de viagem
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "DESP-VIAGEM-001",
+  "type": "payable",
+  "status": "sent",
+  "dueDate": "2025-01-05",
+  "notes": "Despesas de viagem - Conferência em São Paulo",
+  "items": [
+    {
+      "description": "Passagens aéreas",
+      "quantity": 2,
+      "unitPrice": 850.00
+    },
+    {
+      "description": "Hotel (3 diárias)",
+      "quantity": 3,
+      "unitPrice": 450.00
+    },
+    {
+      "description": "Alimentação",
+      "quantity": 1,
+      "unitPrice": 600.00
+    }
+  ]
+}
+
+###
+
+### 6.3 - CASO 3: Fatura com desconto promocional
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "PROMO-2024-001",
+  "type": "receivable",
+  "status": "draft",
+  "dueDate": "2025-01-20",
+  "notes": "Cliente novo - Desconto promocional de 20%",
+  "items": [
+    {
+      "description": "Setup inicial",
+      "quantity": 1,
+      "unitPrice": 5000.00,
+      "discountRate": 20
+    },
+    {
+      "description": "Treinamento da equipe",
+      "quantity": 8,
+      "unitPrice": 200.00,
+      "discountRate": 20
+    }
+  ]
+}
+
+###
+
+# ============================================
+# SEÇÃO 7: TESTES DE PERFORMANCE
+# ============================================
+
+### 7.1 - Criar múltiplas invoices (simula carga)
+# Execute várias vezes para popular o banco
+POST {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "number": "BULK-{{$timestamp}}",
+  "type": "receivable",
+  "dueDate": "2025-02-28",
+  "items": [
+    {
+      "description": "Item de teste {{$timestamp}}",
+      "quantity": 1,
+      "unitPrice": 100.00
+    }
+  ]
+}
+
+###
+
+### 7.2 - Listar todas (teste de paginação)
+GET {{baseUrl}}/invoices
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 8: LIMPEZA E MANUTENÇÃO
+# ============================================
+
+### 8.1 - Verificar e marcar vencidas
+POST {{baseUrl}}/invoices/check-overdue
+Authorization: Bearer {{token}}
+
+###
+
+### 8.2 - Ver resumo financeiro completo
+GET {{baseUrl}}/finance/summary
+Authorization: Bearer {{token}}
+
+###
+
+### 8.3 - Estatísticas finais
+GET {{baseUrl}}/invoices/stats
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# FIM DOS TESTES
+# ============================================

@@ -1,0 +1,627 @@
+### 📦 PRODUCTS & INVENTORY - COMPLETE HTTP TESTS
+### Arquivo completo para testar TODAS as funcionalidades
+### Salve como: tests/http/inventory-complete.http
+
+# ============================================
+# VARIÁVEIS
+# ============================================
+@baseUrl = http://localhost:3001/api/erp
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
+@productId = 85827f80-943d-4034-a7a6-7c665770013c
+@sku = 
+@barcode = 
+
+# ============================================
+# SEÇÃO 1: CRUD BÁSICO DE PRODUTOS
+# ============================================
+
+### 1.1 - CREATE PRODUCT (COMPLETO)
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-001",
+  "name": "Notebook Dell Inspiron 15",
+  "description": "Notebook Dell Inspiron 15, Intel Core i7, 16GB RAM, 512GB SSD",
+  "category": "Eletrônicos",
+  "subcategory": "Notebooks",
+  "unitPrice": 4500.00,
+  "costPrice": 3200.00,
+  "stock": 25,
+  "minStock": 5,
+  "maxStock": 100,
+  "unit": "un",
+  "isActive": true,
+  "barcode": "7891234567890",
+  "imageUrl": "https://example.com/dell-inspiron-15.jpg"
+}
+
+###
+
+### 1.2 - CREATE PRODUCT (SIMPLES)
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-002",
+  "name": "Mouse Logitech MX Master 3",
+  "category": "Periféricos",
+  "unitPrice": 450.00,
+  "stock": 50
+}
+
+###
+
+### 1.3 - CREATE PRODUCT (COM PRICE AO INVÉS DE unitPrice)
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-003",
+  "name": "Teclado Mecânico Keychron K2",
+  "category": "Periféricos",
+  "price": 650.00,
+  "stock": 30,
+  "minStock": 10
+}
+
+###
+
+### 1.4 - LIST ALL PRODUCTS
+GET {{baseUrl}}/products
+Authorization: Bearer {{token}}
+
+###
+
+### 1.5 - LIST PRODUCTS (FILTRO - CATEGORIA)
+GET {{baseUrl}}/products?category=Eletrônicos
+Authorization: Bearer {{token}}
+
+###
+
+### 1.6 - LIST PRODUCTS (FILTRO - ATIVOS)
+GET {{baseUrl}}/products?isActive=true
+Authorization: Bearer {{token}}
+
+###
+
+### 1.7 - LIST PRODUCTS (FILTRO - INATIVOS)
+GET {{baseUrl}}/products?isActive=false
+Authorization: Bearer {{token}}
+
+###
+
+### 1.8 - LIST PRODUCTS (BUSCA POR TEXTO)
+GET {{baseUrl}}/products?q=notebook
+Authorization: Bearer {{token}}
+
+###
+
+### 1.9 - LIST PRODUCTS (MÚLTIPLOS FILTROS)
+GET {{baseUrl}}/products?category=Periféricos&isActive=true&q=mouse
+Authorization: Bearer {{token}}
+
+###
+
+### 1.10 - GET PRODUCT BY ID
+GET {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 1.11 - UPDATE PRODUCT (PREÇO)
+PATCH {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "unitPrice": 4200.00,
+  "costPrice": 3000.00
+}
+
+###
+
+### 1.12 - UPDATE PRODUCT (ESTOQUE)
+PATCH {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "stock": 30,
+  "minStock": 8
+}
+
+###
+
+### 1.13 - UPDATE PRODUCT (DESCRIÇÃO)
+PATCH {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "description": "Descrição atualizada com mais detalhes do produto",
+  "category": "Informática"
+}
+
+###
+
+### 1.14 - DELETE PRODUCT
+# ⚠️ CUIDADO: Isso vai deletar o produto permanentemente
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 2: BUSCA ESPECIALIZADA
+# ============================================
+
+### 2.1 - GET PRODUCT BY SKU
+GET {{baseUrl}}/products/sku/PROD-001
+Authorization: Bearer {{token}}
+
+###
+
+### 2.2 - GET PRODUCT BY BARCODE
+GET {{baseUrl}}/products/barcode/7891234567890
+Authorization: Bearer {{token}}
+
+###
+
+### 2.3 - GET LOW STOCK PRODUCTS
+GET {{baseUrl}}/products/low-stock
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 3: MOVIMENTAÇÃO DE ESTOQUE
+# ============================================
+
+### 3.1 - ENTRADA DE ESTOQUE (IN)
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "in",
+  "quantity": 50,
+  "reason": "Compra de fornecedor XYZ - NF 12345"
+}
+
+###
+
+### 3.2 - SAÍDA DE ESTOQUE (OUT)
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "out",
+  "quantity": 10,
+  "reason": "Venda para cliente ABC - Pedido #123"
+}
+
+###
+
+### 3.3 - AJUSTE DE ESTOQUE (ADJUSTMENT)
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "adjustment",
+  "quantity": 5,
+  "reason": "Inventário - ajuste de contagem"
+}
+
+###
+
+### 3.4 - GET STOCK MOVEMENTS (HISTÓRICO)
+GET {{baseUrl}}/products/{{productId}}/movements
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 4: ATIVAR/DESATIVAR PRODUTOS
+# ============================================
+
+### 4.1 - DEACTIVATE PRODUCT
+POST {{baseUrl}}/products/{{productId}}/deactivate
+Authorization: Bearer {{token}}
+
+###
+
+### 4.2 - ACTIVATE PRODUCT
+POST {{baseUrl}}/products/{{productId}}/activate
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 5: ESTATÍSTICAS
+# ============================================
+
+### 5.1 - GET INVENTORY STATS
+GET {{baseUrl}}/products/stats
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 6: WORKFLOWS COMPLETOS
+# ============================================
+
+### 6.1 - WORKFLOW COMPLETO - NOVO PRODUTO
+# Passo 1: Criar produto
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "WF-PROD-001",
+  "name": "Monitor LG UltraWide 29\"",
+  "category": "Monitores",
+  "unitPrice": 1800.00,
+  "costPrice": 1200.00,
+  "stock": 0,
+  "minStock": 3
+}
+
+###
+
+# Passo 2: Entrada de estoque inicial
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "in",
+  "quantity": 15,
+  "reason": "Estoque inicial - primeira compra"
+}
+
+###
+
+# Passo 3: Vendas (várias saídas)
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "out",
+  "quantity": 8,
+  "reason": "Vendas do mês"
+}
+
+###
+
+# Passo 4: Verificar se ficou com estoque baixo
+GET {{baseUrl}}/products/low-stock
+Authorization: Bearer {{token}}
+
+###
+
+# Passo 5: Repor estoque
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "in",
+  "quantity": 10,
+  "reason": "Reposição de estoque"
+}
+
+###
+
+# Passo 6: Ver histórico completo
+GET {{baseUrl}}/products/{{productId}}/movements
+Authorization: Bearer {{token}}
+
+###
+
+### 6.2 - WORKFLOW - DESCONTINUAR PRODUTO
+# Passo 1: Desativar produto
+POST {{baseUrl}}/products/{{productId}}/deactivate
+Authorization: Bearer {{token}}
+
+###
+
+# Passo 2: Zerar estoque (liquidação)
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "out",
+  "quantity": 100,
+  "reason": "Liquidação - produto descontinuado"
+}
+
+###
+
+# Passo 3: Ver estatísticas atualizadas
+GET {{baseUrl}}/products/stats
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 7: CASOS DE USO REAIS
+# ============================================
+
+### 7.1 - CASO 1: Cadastro de produto eletrônico completo
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "ELETRO-IPHONE-15-PRO",
+  "name": "iPhone 15 Pro 256GB",
+  "description": "iPhone 15 Pro com chip A17 Pro, câmera de 48MP, tela Super Retina XDR de 6.1 polegadas",
+  "category": "Smartphones",
+  "subcategory": "Apple",
+  "unitPrice": 8999.00,
+  "costPrice": 7200.00,
+  "stock": 20,
+  "minStock": 5,
+  "maxStock": 50,
+  "unit": "un",
+  "barcode": "0194253773634",
+  "imageUrl": "https://cdn.example.com/iphone-15-pro.jpg"
+}
+
+###
+
+### 7.2 - CASO 2: Produto de papelaria
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PAP-CANETA-BIC-AZ",
+  "name": "Caneta BIC Cristal Azul",
+  "category": "Papelaria",
+  "subcategory": "Canetas",
+  "unitPrice": 2.50,
+  "costPrice": 1.20,
+  "stock": 500,
+  "minStock": 100,
+  "unit": "un"
+}
+
+###
+
+### 7.3 - CASO 3: Peça de reposição
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PECA-FILTRO-AR-123",
+  "name": "Filtro de Ar - Motor XYZ",
+  "description": "Filtro de ar compatível com motores XYZ linha 2020-2024",
+  "category": "Peças",
+  "subcategory": "Filtros",
+  "unitPrice": 85.00,
+  "costPrice": 45.00,
+  "stock": 80,
+  "minStock": 20,
+  "unit": "un",
+  "barcode": "7898765432109"
+}
+
+###
+
+### 7.4 - CASO 4: Produto vendido por peso
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "ALIM-ARROZ-INTEGRAL",
+  "name": "Arroz Integral Orgânico",
+  "category": "Alimentos",
+  "subcategory": "Grãos",
+  "unitPrice": 18.50,
+  "costPrice": 12.00,
+  "stock": 200,
+  "minStock": 50,
+  "unit": "kg"
+}
+
+###
+
+# ============================================
+# SEÇÃO 8: TESTES DE ERRO (VALIDAÇÕES)
+# ============================================
+
+### 8.1 - ERRO: Criar produto sem SKU
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Produto sem SKU",
+  "unitPrice": 100.00
+}
+
+# Esperado: Erro de validação
+
+###
+
+### 8.2 - ERRO: Criar produto sem nome
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "ERROR-001",
+  "unitPrice": 100.00
+}
+
+# Esperado: Erro de validação
+
+###
+
+### 8.3 - ERRO: Criar produto sem preço
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "ERROR-002",
+  "name": "Produto sem preço"
+}
+
+# Esperado: "unitPrice (ou price) é obrigatório"
+
+###
+
+### 8.4 - ERRO: SKU duplicado
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-001",
+  "name": "Tentando criar com SKU duplicado",
+  "unitPrice": 100.00
+}
+
+# Esperado: "SKU already exists for this company"
+
+###
+
+### 8.5 - ERRO: Atualizar para SKU duplicado
+PATCH {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "PROD-002"
+}
+
+# Esperado: "SKU already exists for this company" (se PROD-002 já existe)
+
+###
+
+### 8.6 - ERRO: Saída maior que estoque
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "out",
+  "quantity": 99999,
+  "reason": "Tentando tirar mais do que tem"
+}
+
+# Esperado: "Stock cannot go below zero"
+
+###
+
+### 8.7 - ERRO: Quantity negativa
+POST {{baseUrl}}/products/{{productId}}/stock
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "in",
+  "quantity": -10
+}
+
+# Esperado: Erro de validação (quantity must be positive)
+
+###
+
+### 8.8 - ERRO: Buscar produto que não existe
+GET {{baseUrl}}/products/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+# Esperado: 404 "Product not found"
+
+###
+
+### 8.9 - ERRO: Buscar SKU que não existe
+GET {{baseUrl}}/products/sku/NAO-EXISTE-123
+Authorization: Bearer {{token}}
+
+# Esperado: 404 "Product not found with this SKU"
+
+###
+
+### 8.10 - ERRO: Sem autenticação
+GET {{baseUrl}}/products
+
+# Esperado: 401 Unauthorized
+
+###
+
+# ============================================
+# SEÇÃO 9: TESTES DE PERFORMANCE
+# ============================================
+
+### 9.1 - Criar múltiplos produtos (simula carga)
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "sku": "BULK-{{$timestamp}}",
+  "name": "Produto em massa {{$timestamp}}",
+  "category": "Teste",
+  "unitPrice": 100.00,
+  "stock": 50
+}
+
+###
+
+### 9.2 - Listar todos (teste de paginação)
+GET {{baseUrl}}/products
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 10: MANUTENÇÃO E RELATÓRIOS
+# ============================================
+
+### 10.1 - Produtos com estoque baixo
+GET {{baseUrl}}/products/low-stock
+Authorization: Bearer {{token}}
+
+###
+
+### 10.2 - Estatísticas completas
+GET {{baseUrl}}/products/stats
+Authorization: Bearer {{token}}
+
+###
+
+### 10.3 - Produtos ativos
+GET {{baseUrl}}/products?isActive=true
+Authorization: Bearer {{token}}
+
+###
+
+### 10.4 - Produtos inativos
+GET {{baseUrl}}/products?isActive=false
+Authorization: Bearer {{token}}
+
+###
+
+### 10.5 - Produtos por categoria
+GET {{baseUrl}}/products?category=Eletrônicos
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# FIM DOS TESTES
+# ============================================

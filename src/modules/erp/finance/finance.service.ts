@@ -1,16 +1,38 @@
 import { PrismaClient } from '@prisma/client';
 
+/**
+ * 💰 FINANCE SERVICE - VERSÃO COMPLETA
+ * 
+ * Funcionalidades EXISTENTES (mantidas):
+ * - createInvoice() ✅
+ * - listInvoices() ✅
+ * - getInvoice() ✅
+ * - updateInvoice() ✅
+ * - deleteInvoice() ✅
+ * - getSummary() ✅
+ * 
+ * Funcionalidades NOVAS (adicionadas):
+ * - send() ✅ Enviar invoice (draft → sent)
+ * - markAsPaid() ✅ Marcar como paga
+ * - cancel() ✅ Cancelar invoice
+ * - checkOverdue() ✅ Marcar vencidas automaticamente
+ * - getStats() ✅ Estatísticas detalhadas
+ */
+
 export class FinanceService {
   constructor(private prisma: PrismaClient) {}
+
+  // ============================================
+  // MÉTODOS EXISTENTES (MANTIDOS)
+  // ============================================
+
   async getSummary(companyId: string, params?: any) {
-    // filtros por período (opcional)
     const from = params?.from ? new Date(params.from) : undefined;
     const to = params?.to ? new Date(params.to) : undefined;
 
     const invoiceWhere: any = { companyId };
     const expenseWhere: any = { companyId };
 
-    // Se quiser considerar período por issueDate (invoice) e date (expense)
     if (from || to) {
       invoiceWhere.issueDate = {};
       expenseWhere.date = {};
@@ -42,7 +64,6 @@ export class FinanceService {
       }),
     ]);
 
-    // Receitas (receivable)
     const receivable = invoices.filter((x) => x.type === 'receivable');
     const payable = invoices.filter((x) => x.type === 'payable');
 
@@ -51,7 +72,6 @@ export class FinanceService {
     const revenueTotal = sum(receivable, 'total');
     const payableTotal = sum(payable, 'total');
 
-    // status invoices
     const revenuePaid = sum(
       receivable.filter((x) => x.status === 'paid'),
       'total'
@@ -76,7 +96,6 @@ export class FinanceService {
     const expensesPendingTotal = expensesPending.reduce((a, x) => a + Number(x.amount ?? 0), 0);
     const expensesRejectedTotal = expensesRejected.reduce((a, x) => a + Number(x.amount ?? 0), 0);
 
-    // lucro simples (receita - despesas)
     const profit = revenuePaid - expensesApprovedTotal;
 
     return {
@@ -84,7 +103,6 @@ export class FinanceService {
         from: from ? from.toISOString() : null,
         to: to ? to.toISOString() : null,
       },
-
       invoices: {
         receivable: {
           total: revenueTotal,
@@ -98,7 +116,6 @@ export class FinanceService {
           count: payable.length,
         },
       },
-
       expenses: {
         total: expensesTotal,
         approvedTotal: expensesApprovedTotal,
@@ -106,7 +123,6 @@ export class FinanceService {
         rejectedTotal: expensesRejectedTotal,
         count: expenses.length,
       },
-
       profit,
     };
   }
@@ -115,7 +131,6 @@ export class FinanceService {
     const issueDate = data.issueDate ? new Date(data.issueDate) : undefined;
     const dueDate = data.dueDate ? new Date(data.dueDate) : undefined;
 
-    // Atualiza apenas campos do Invoice (não mexe em items aqui)
     const result = await this.prisma.invoice.updateMany({
       where: { id, companyId },
       data: {
@@ -143,15 +158,12 @@ export class FinanceService {
   }
 
   async createInvoice(data: any, companyId: string) {
-    // aceita tanto "number" quanto "invoiceNumber"
     const number = data.number ?? data.invoiceNumber;
     if (!number) throw new Error('Invoice number is required (number | invoiceNumber)');
 
-    // DateTime no Prisma -> Date
     const issueDate = data.issueDate ? new Date(data.issueDate) : new Date();
     const dueDate = data.dueDate ? new Date(data.dueDate) : new Date();
 
-    // itens: recalcular subtotal/total se quiser (aqui só normalizo)
     const itemsInput = Array.isArray(data.items?.create)
       ? data.items.create
       : Array.isArray(data.items)
@@ -180,34 +192,26 @@ export class FinanceService {
       };
     });
 
-    // mapeamentos do schema
     const subtotal = Number(data.subtotal ?? itemsCreate.reduce((a, x) => a + (x.total ?? 0), 0));
     const taxAmount = Number(data.taxAmount ?? data.tax ?? 0);
     const discountAmount = Number(data.discountAmount ?? 0);
-
     const total = Number(data.total ?? subtotal + taxAmount - discountAmount);
 
     return this.prisma.invoice.create({
       data: {
         company: { connect: { id: companyId } },
-
         number: String(number),
         type: data.type ?? 'receivable',
         status: data.status ?? 'draft',
-
         contactId: data.contactId ?? null,
         dealId: data.dealId ?? null,
-
         issueDate,
         dueDate,
-
         subtotal,
         taxAmount,
         discountAmount,
         total,
-
         notes: data.notes ?? null,
-
         items: {
           create: itemsCreate,
         },
@@ -236,5 +240,163 @@ export class FinanceService {
       where: { id, companyId },
     });
     return result.count > 0;
+  }
+
+  // ============================================
+  // 🆕 NOVOS MÉTODOS (ADICIONADOS)
+  // ============================================
+
+  /**
+   * 📤 SEND INVOICE (draft → sent)
+   */
+  async sendInvoice(id: string, companyId: string) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id, companyId },
+    });
+
+    if (!invoice) return null;
+    if (invoice.status !== 'draft') {
+      throw new Error('Only draft invoices can be sent');
+    }
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: { status: 'sent' },
+      include: { items: true },
+    });
+  }
+
+  /**
+   * 💰 MARK AS PAID
+   */
+  async markAsPaid(
+    id: string,
+    companyId: string,
+    payment: {
+      paidAmount: number;
+      paidDate?: Date | string;
+      paymentMethod?: string;
+    }
+  ) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id, companyId },
+    });
+
+    if (!invoice) return null;
+
+    const paidDate = payment.paidDate ? new Date(payment.paidDate) : new Date();
+    const paidAmount = Number(payment.paidAmount);
+
+    // Se pagamento total, marcar como paid
+    const status = paidAmount >= invoice.total ? 'paid' : invoice.status;
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: {
+        status,
+        paidAmount,
+        paidDate,
+        paymentMethod: payment.paymentMethod || invoice.paymentMethod,
+      },
+      include: { items: true },
+    });
+  }
+
+  /**
+   * ❌ CANCEL INVOICE
+   */
+  async cancelInvoice(id: string, companyId: string, reason?: string) {
+    const invoice = await this.prisma.invoice.findFirst({
+      where: { id, companyId },
+    });
+
+    if (!invoice) return null;
+    if (invoice.status === 'paid') {
+      throw new Error('Cannot cancel a paid invoice');
+    }
+
+    const notes = reason
+      ? `${invoice.notes || ''}\n\nCancelled: ${reason}`.trim()
+      : invoice.notes;
+
+    return this.prisma.invoice.update({
+      where: { id },
+      data: { status: 'cancelled', notes },
+      include: { items: true },
+    });
+  }
+
+  /**
+   * ⏰ CHECK OVERDUE INVOICES
+   * Marca invoices vencidas como overdue
+   */
+  async checkOverdue(companyId: string) {
+    const now = new Date();
+
+    const result = await this.prisma.invoice.updateMany({
+      where: {
+        companyId,
+        status: 'sent',
+        dueDate: { lt: now },
+      },
+      data: { status: 'overdue' },
+    });
+
+    return result.count;
+  }
+
+  /**
+   * 📊 GET DETAILED STATISTICS
+   * Estatísticas mais detalhadas que getSummary
+   */
+  async getStats(companyId: string, type?: 'receivable' | 'payable') {
+    const where: any = { companyId };
+    if (type) where.type = type;
+
+    const [total, paid, pending, overdue] = await Promise.all([
+      // Total
+      this.prisma.invoice.aggregate({
+        where,
+        _sum: { total: true },
+        _count: true,
+      }),
+      // Paid
+      this.prisma.invoice.aggregate({
+        where: { ...where, status: 'paid' },
+        _sum: { paidAmount: true },
+        _count: true,
+      }),
+      // Pending (sent + draft)
+      this.prisma.invoice.aggregate({
+        where: { ...where, status: { in: ['sent', 'draft'] } },
+        _sum: { total: true },
+        _count: true,
+      }),
+      // Overdue
+      this.prisma.invoice.aggregate({
+        where: { ...where, status: 'overdue' },
+        _sum: { total: true },
+        _count: true,
+      }),
+    ]);
+
+    return {
+      total: {
+        count: total._count,
+        amount: total._sum.total || 0,
+      },
+      paid: {
+        count: paid._count,
+        amount: paid._sum.paidAmount || 0,
+      },
+      pending: {
+        count: pending._count,
+        amount: pending._sum.total || 0,
+      },
+      overdue: {
+        count: overdue._count,
+        amount: overdue._sum.total || 0,
+      },
+    };
   }
 }

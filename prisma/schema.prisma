@@ -24,7 +24,7 @@ model Company {
   confirm8ApiDomain      String?
   confirm8ApiKeyToken    String?
   confirm8ApiKeySecret   String?
-  
+  integrationConfigs IntegrationConfig[]
   // Performance (JÁ EXISTENTE)
   performanceGoals   PerformanceGoal[]
   employeeActivities EmployeeActivity[]
@@ -842,6 +842,11 @@ model Supplier {
   isActive        Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  legalName     String?
+  contactPerson String?
+  contactEmail  String?
+  contactPhone  String?
+  deliveryTime  Int?
   
   @@map("suppliers")
   @@index([companyId])
@@ -869,3 +874,174 @@ model CompanySettings {
   
   @@map("company_settings")
 }
+// Configurações de integração por empresa
+model IntegrationConfig {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  integration String   // "rdstation", "confirm8", "pipedrive", "hubspot", etc
+  enabled     Boolean  @default(false)
+  
+  // Configurações específicas de cada integração (JSON flexível)
+  config      Json     // { apiKey, domain, clientId, clientSecret, webhookSecret, etc }
+  
+  // Preferências de sincronização
+  syncSettings Json?   // { entities: ["contacts", "deals"], direction: "bidirectional", conflictStrategy: "newest_wins" }
+  
+  lastSyncAt  DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  
+  @@unique([companyId, integration])
+  @@map("integration_configs")
+  @@index([companyId, enabled])
+  @@index([integration])
+}
+
+// Log de todas as sincronizações
+model SyncLog {
+  id            String   @id @default(uuid())
+  companyId     String
+  
+  integration   String   // "rdstation", "confirm8"
+  entity        String   // "contact", "deal", "appointment"
+  action        String   // "create", "update", "delete", "skip"
+  direction     String   // "to_omni", "from_omni"
+  
+  externalId    String?  // ID no sistema externo
+  internalId    String?  // ID no OMNI
+  
+  status        String   // "success", "failed", "skipped", "conflict"
+  errorCode     String?
+  errorMessage  String?  @db.Text
+  
+  // Dados processados (para auditoria)
+  dataBefore    Json?
+  dataAfter     Json?
+  
+  // Metadata
+  duration      Int?     // Tempo de processamento (ms)
+  retryCount    Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("sync_logs")
+  @@index([companyId, integration, createdAt])
+  @@index([status])
+  @@index([entity, action])
+}
+
+// Fila de sincronização (jobs pendentes)
+model SyncQueue {
+  id            String   @id @default(uuid())
+  companyId     String
+  
+  integration   String   // Qual integração
+  entity        String   // Qual entidade
+  action        String   // Qual ação
+  
+  payload       Json     // Dados a serem sincronizados
+  
+  status        String   @default("pending") // "pending", "processing", "completed", "failed"
+  priority      Int      @default(5) // 1-10 (10 = mais alta)
+  
+  attempts      Int      @default(0)
+  maxAttempts   Int      @default(3)
+  
+  error         String?  @db.Text
+  
+  scheduledFor  DateTime @default(now())
+  processedAt   DateTime?
+  completedAt   DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@map("sync_queue")
+  @@index([companyId, status, scheduledFor])
+  @@index([integration, status])
+  @@index([priority, scheduledFor])
+}
+
+// Mapeamento de IDs entre sistemas (deduplicação)
+model EntityMapping {
+  id            String   @id @default(uuid())
+  companyId     String
+  
+  entity        String   // "contact", "deal"
+  
+  internalId    String   // ID no OMNI
+  externalId    String   // ID no sistema externo
+  integration   String   // Qual integração
+  
+  // Metadados de matching
+  matchScore    Float?   // Score de fuzzy matching (0-100)
+  matchMethod   String?  // "exact_email", "fuzzy_name", "phone", "manual"
+  
+  verified      Boolean  @default(false) // Se foi verificado manualmente
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@unique([companyId, entity, internalId, integration])
+  @@unique([companyId, entity, externalId, integration])
+  @@map("entity_mappings")
+  @@index([companyId, entity])
+  @@index([integration])
+}
+
+// Conflitos que requerem resolução manual
+model SyncConflict {
+  id            String   @id @default(uuid())
+  companyId     String
+  
+  integration   String
+  entity        String
+  entityId      String   // ID no OMNI
+  
+  conflictType  String   // "duplicate", "data_mismatch", "circular_update"
+  
+  // Dados conflitantes
+  omniData      Json
+  externalData  Json
+  
+  // Sugestões de resolução
+  suggestedAction String? // "merge", "keep_omni", "keep_external", "manual"
+  
+  status        String   @default("pending") // "pending", "resolved", "ignored"
+  
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  resolution    Json?    // Como foi resolvido
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("sync_conflicts")
+  @@index([companyId, status])
+  @@index([integration, entity])
+}
+
+// Webhooks recebidos (para debugging)
+model WebhookLog {
+  id            String   @id @default(uuid())
+  
+  integration   String   // De qual integração veio
+  event         String   // Tipo de evento
+  
+  payload       Json     // Payload completo
+  headers       Json?    // Headers HTTP
+  
+  status        String   // "received", "processed", "failed"
+  processedAt   DateTime?
+  error         String?  @db.Text
+  
+  createdAt     DateTime @default(now())
+  
+  @@map("webhook_logs")
+  @@index([integration, createdAt])
+  @@index([status])
+}
+

@@ -19,7 +19,7 @@
     "@fastify/rate-limit": "^9.1.0",
     "@prisma/client": "^6.0.0",
     "@qdrant/js-client-rest": "^1.8.2",
-    "axios": "^1.6.5",
+    "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.1.0",
     "fastify": "^4.29.1",

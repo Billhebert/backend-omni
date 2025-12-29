@@ -5,7 +5,16 @@ export class InventoryService {
   constructor(private prisma: PrismaClient) {}
 
   async createProduct(data: any, companyId: string) {
-    // ✅ mapeia payload "completo" para o schema real
+    // ✅ Validar SKU único
+    if (data.sku) {
+      const existing = await this.prisma.product.findFirst({
+        where: { companyId, sku: String(data.sku) },
+      });
+      if (existing) {
+        throw new Error(`SKU "${data.sku}" already exists for this company`);
+      }
+    }
+
     const unitPrice = data.unitPrice ?? data.price;
     if (unitPrice == null) {
       throw new Error('unitPrice (ou price) é obrigatório');
@@ -18,10 +27,9 @@ export class InventoryService {
         ? Number(data.cost)
         : null;
 
-    // ✅ monta somente campos que existem no schema (evita erro do Prisma)
     return this.prisma.product.create({
       data: {
-        companyId, // pode ser direto (já existe no model)
+        companyId,
         sku: String(data.sku ?? ''),
         name: String(data.name ?? ''),
         description: data.description ?? null,
@@ -48,20 +56,16 @@ export class InventoryService {
   async listProducts(companyId: string, filters?: { category?: any; isActive?: any; q?: any }) {
     const where: any = { companyId };
 
-    // category
     if (filters?.category != null && String(filters.category).trim() !== '') {
       where.category = String(filters.category);
     }
 
-    // isActive (converte string -> boolean)
     if (filters?.isActive != null) {
       const v = String(filters.isActive).toLowerCase().trim();
       if (v === 'true' || v === '1') where.isActive = true;
       else if (v === 'false' || v === '0') where.isActive = false;
-      // se vier qualquer outra coisa, ignora pra não quebrar
     }
 
-    // busca simples (opcional)
     if (filters?.q != null && String(filters.q).trim() !== '') {
       const q = String(filters.q).trim();
       where.OR = [
@@ -91,8 +95,6 @@ export class InventoryService {
 
     const previousStock = product.stock;
 
-    // ✅ adjustment aqui será tratado como "ajuste" (soma/subtrai via qty positivo)
-    // Se você quiser adjustment como "definir estoque", eu te adapto depois.
     let newStock = previousStock;
     if (type === 'out') newStock = previousStock - qty;
     else newStock = previousStock + qty;
@@ -117,7 +119,6 @@ export class InventoryService {
       }),
     ]);
 
-    // Alert if low stock
     if (product.minStock != null && newStock <= product.minStock) {
       console.log(`⚠️  Low stock alert: ${product.name} (${newStock}/${product.minStock})`);
     }
@@ -126,8 +127,6 @@ export class InventoryService {
   }
 
   async getLowStockProducts(companyId: string) {
-    // ❗ Prisma não compara campo com campo (stock <= minStock) direto.
-    // ✅ No Postgres, fazemos via SQL.
     return this.prisma.$queryRaw<
       Array<{
         id: string;
@@ -139,25 +138,29 @@ export class InventoryService {
         isActive: boolean;
         unitPrice: number;
       }>
-    >`
-      SELECT
-        id,
-        "companyId",
-        sku,
-        name,
-        stock,
-        "minStock",
-        "isActive",
-        "unitPrice"
-      FROM "products"
-      WHERE
-        "companyId" = ${companyId}
-        AND "isActive" = true
-        AND "minStock" IS NOT NULL
-        AND stock <= "minStock"
-      ORDER BY name ASC;
-    `;
+    >(
+      `
+    SELECT
+      id,
+      "companyId",
+      sku,
+      name,
+      stock,
+      "minStock",
+      "isActive",
+      "unitPrice"
+    FROM "products"
+    WHERE
+      "companyId" = $1
+      AND "isActive" = true
+      AND "minStock" IS NOT NULL
+      AND stock <= "minStock"
+    ORDER BY name ASC;
+  `,
+      companyId
+    );
   }
+
   async getProduct(id: string, companyId: string) {
     return this.prisma.product.findFirst({
       where: { id, companyId },
@@ -165,6 +168,20 @@ export class InventoryService {
   }
 
   async updateProduct(id: string, companyId: string, data: any) {
+    // ✅ Validar SKU único se estiver mudando
+    if (data.sku) {
+      const existing = await this.prisma.product.findFirst({
+        where: {
+          companyId,
+          sku: String(data.sku),
+          NOT: { id },
+        },
+      });
+      if (existing) {
+        throw new Error(`SKU "${data.sku}" already exists for this company`);
+      }
+    }
+
     const unitPrice = data.unitPrice ?? data.price;
     const costPrice = data.costPrice ?? data.cost;
 
@@ -203,8 +220,8 @@ export class InventoryService {
     });
     return result.count > 0;
   }
+
   async listMovements(productId: string, companyId: string) {
-    // garante que o produto pertence à empresa
     const product = await this.prisma.product.findFirst({
       where: { id: productId, companyId },
       select: { id: true },
@@ -216,5 +233,105 @@ export class InventoryService {
       include: { user: true, product: true },
       orderBy: { timestamp: 'desc' },
     });
+  }
+
+  // 🆕 NOVOS MÉTODOS
+  async getProductBySKU(sku: string, companyId: string) {
+    return this.prisma.product.findFirst({
+      where: {
+        companyId,
+        sku: String(sku),
+      },
+    });
+  }
+
+  async getProductByBarcode(barcode: string, companyId: string) {
+    return this.prisma.product.findFirst({
+      where: {
+        companyId,
+        barcode: String(barcode),
+      },
+    });
+  }
+
+  async activateProduct(id: string, companyId: string) {
+    const result = await this.prisma.product.updateMany({
+      where: { id, companyId },
+      data: { isActive: true },
+    });
+
+    if (result.count === 0) return null;
+    return this.getProduct(id, companyId);
+  }
+
+  async deactivateProduct(id: string, companyId: string) {
+    const result = await this.prisma.product.updateMany({
+      where: { id, companyId },
+      data: { isActive: false },
+    });
+
+    if (result.count === 0) return null;
+    return this.getProduct(id, companyId);
+  }
+
+  async getInventoryStats(companyId: string) {
+    const [total, active, inactive, lowStock, outOfStock] = await Promise.all([
+      this.prisma.product.count({
+        where: { companyId },
+      }),
+
+      this.prisma.product.count({
+        where: { companyId, isActive: true },
+      }),
+
+      this.prisma.product.count({
+        where: { companyId, isActive: false },
+      }),
+
+      this.prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*) as count
+        FROM "products"
+        WHERE 
+          "companyId" = ${companyId}
+          AND "isActive" = true
+          AND "minStock" IS NOT NULL
+          AND stock <= "minStock"
+          AND stock > 0
+      `,
+
+      this.prisma.product.count({
+        where: {
+          companyId,
+          isActive: true,
+          stock: 0,
+        },
+      }),
+    ]);
+
+    const stockValue = await this.prisma.product.aggregate({
+      where: { companyId, isActive: true },
+      _sum: {
+        stock: true,
+      },
+    });
+
+    const products = await this.prisma.product.findMany({
+      where: { companyId, isActive: true },
+      select: { stock: true, unitPrice: true },
+    });
+
+    const totalValue = products.reduce((sum, p) => {
+      return sum + p.stock * p.unitPrice;
+    }, 0);
+
+    return {
+      total,
+      active,
+      inactive,
+      lowStock: Number(lowStock[0].count),
+      outOfStock,
+      totalStockUnits: stockValue._sum.stock || 0,
+      totalStockValue: totalValue,
+    };
   }
 }

@@ -1,5 +1,6 @@
 // backend/src/server.ts
 import { buildApp } from './app';
+import { initializeSyncEngine } from './modules/sync';
 
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || '0.0.0.0';
@@ -7,7 +8,7 @@ const HOST = process.env.HOST || '0.0.0.0';
 async function start() {
   try {
     const app = await buildApp();
-
+    initializeSyncEngine(); // 🆕
     await app.listen({ port: PORT, host: HOST });
 
     console.log(`

@@ -23,10 +23,13 @@ import { pipelineRoutes } from './modules/crm/pipeline/pipeline.routes';
 
 // ERP
 import { financeRoutes } from './modules/erp/finance/finance.routes';
-
 import { inventoryRoutes } from './modules/erp/inventory/inventory.routes';
 import { expensesRoutes } from './modules/erp/expenses/expenses.routes';
+import { suppliersRoutes } from './modules/erp/suppliers/suppliers.routes';
 
+// Sync
+import { syncRoutes } from './modules/sync/routes/sync.routes';
+import { webhooksRoutes } from './modules/sync/routes/webhooks.routes';
 // Knowledge & Chat
 import { knowledgeRoutes } from './modules/knowledge/knowledge.routes';
 import { chatRoutes } from './modules/chat/chat.routes';
@@ -72,7 +75,10 @@ export async function buildApp(): Promise<FastifyInstance> {
   await app.register(expensesRoutes, { prefix: '/api/erp' });
   await app.register(knowledgeRoutes, { prefix: '/api' });
   await app.register(chatRoutes, { prefix: '/api' });
-
+  await app.register(suppliersRoutes, { prefix: '/api/erp' });
+  // Registrar routes
+  await app.register(syncRoutes, { prefix: '/api' });
+  await app.register(webhooksRoutes, { prefix: '/api' });
   // Error handler
   app.setErrorHandler((error, request, reply) => {
     app.log.error(error);

@@ -1,0 +1,684 @@
+### 🏭 SUPPLIERS - COMPLETE HTTP TESTS
+### Arquivo completo para testar TODAS as funcionalidades
+### Salve como: tests/http/suppliers.http
+
+# ============================================
+# VARIÁVEIS
+# ============================================
+@baseUrl = http://localhost:3001/api/erp
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjcyN2EwZjdmLWQ0ZTgtNGQyOS04M2YyLWRjMGRlOGE0MDYxNyIsImNvbXBhbnlJZCI6ImY3MmYyZDFlLTIyOTctNDAwYi04MGNjLWJmYWI4YzExNDYyMiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc2Njk1MTU1NH0.LaHFK1xwW6R6YdHTtADOMQjFio7fT8Qc5T4Ui2tRzc8
+@supplierId = 0ef0c0a5-54af-44e5-9e99-031964458186
+
+# ============================================
+# SEÇÃO 1: CRUD BÁSICO
+# ============================================
+
+### 1.1 - CREATE SUPPLIER (COMPLETO)
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Tech Solutions LTDA",
+  "legalName": "Tech Solutions Tecnologia LTDA",
+  "taxId": "12.345.678/0001-90",
+  "email": "contato@techsolutions.com.br",
+  "phone": "+55 11 3000-1234",
+  "website": "https://www.techsolutions.com.br",
+  "address": "Av. Paulista, 1000 - Conjunto 101",
+  "city": "São Paulo",
+  "state": "SP",
+  "zipCode": "01310-100",
+  "country": "Brasil",
+  "contactPerson": "João Silva",
+  "contactEmail": "joao.silva@techsolutions.com.br",
+  "contactPhone": "+55 11 98765-4321",
+  "paymentTerms": "30 dias",
+  "deliveryTime": 15,
+  "rating": 5,
+  "notes": "Fornecedor de equipamentos de TI. Excelente qualidade e prazo de entrega."
+}
+
+###
+
+### 1.2 - CREATE SUPPLIER (SIMPLES)
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Papelaria Central",
+  "email": "vendas@papelariacentral.com.br",
+  "phone": "+55 11 2000-5555",
+  "city": "São Paulo",
+  "state": "SP"
+}
+
+###
+
+### 1.3 - CREATE SUPPLIER (INTERNACIONAL)
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Global Tech Suppliers Inc",
+  "legalName": "Global Tech Suppliers Incorporated",
+  "email": "sales@globaltechsuppliers.com",
+  "phone": "+1 555-123-4567",
+  "website": "https://www.globaltechsuppliers.com",
+  "address": "1234 Tech Avenue",
+  "city": "San Francisco",
+  "state": "CA",
+  "zipCode": "94102",
+  "country": "USA",
+  "paymentTerms": "Net 60",
+  "deliveryTime": 45,
+  "rating": 4
+}
+
+###
+
+### 1.4 - LIST ALL SUPPLIERS
+GET {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+
+###
+
+### 1.5 - LIST SUPPLIERS (FILTRO - ATIVOS)
+GET {{baseUrl}}/suppliers?isActive=true
+Authorization: Bearer {{token}}
+
+###
+
+### 1.6 - LIST SUPPLIERS (FILTRO - INATIVOS)
+GET {{baseUrl}}/suppliers?isActive=false
+Authorization: Bearer {{token}}
+
+###
+
+### 1.7 - LIST SUPPLIERS (FILTRO - RATING MÍNIMO)
+GET {{baseUrl}}/suppliers?minRating=4
+Authorization: Bearer {{token}}
+
+###
+
+### 1.8 - LIST SUPPLIERS (BUSCA POR TEXTO)
+GET {{baseUrl}}/suppliers?q=tech
+Authorization: Bearer {{token}}
+
+###
+
+### 1.9 - LIST SUPPLIERS (MÚLTIPLOS FILTROS)
+GET {{baseUrl}}/suppliers?isActive=true&minRating=4&q=tech
+Authorization: Bearer {{token}}
+
+###
+
+### 1.10 - GET SUPPLIER BY ID
+GET {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 1.11 - GET SUPPLIER BY TAX ID (CNPJ)
+GET {{baseUrl}}/suppliers/taxid/12.345.678/0001-90
+Authorization: Bearer {{token}}
+
+###
+
+### 1.12 - UPDATE SUPPLIER (DADOS BÁSICOS)
+PATCH {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "phone": "+55 11 3000-9999",
+  "email": "novo.contato@techsolutions.com.br"
+}
+
+###
+
+### 1.13 - UPDATE SUPPLIER (ENDEREÇO)
+PATCH {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "address": "Av. Paulista, 1500 - Conjunto 201",
+  "zipCode": "01310-200"
+}
+
+###
+
+### 1.14 - UPDATE SUPPLIER (PAYMENT TERMS)
+PATCH {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "paymentTerms": "45 dias",
+  "deliveryTime": 10
+}
+
+###
+
+### 1.15 - DELETE SUPPLIER
+# ⚠️ CUIDADO: Isso vai deletar o fornecedor permanentemente
+DELETE {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 2: ATIVAR/DESATIVAR
+# ============================================
+
+### 2.1 - DEACTIVATE SUPPLIER
+POST {{baseUrl}}/suppliers/{{supplierId}}/deactivate
+Authorization: Bearer {{token}}
+
+###
+
+### 2.2 - ACTIVATE SUPPLIER
+POST {{baseUrl}}/suppliers/{{supplierId}}/activate
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 3: RATING E NOTAS
+# ============================================
+
+### 3.1 - UPDATE RATING (5 ESTRELAS)
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "notes": "Excelente fornecedor! Entrega sempre no prazo e produtos de alta qualidade."
+}
+
+###
+
+### 3.2 - UPDATE RATING (3 ESTRELAS)
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 3,
+  "notes": "Bom fornecedor, mas teve alguns atrasos recentes."
+}
+
+###
+
+### 3.3 - UPDATE RATING (SEM NOTAS)
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 4
+}
+
+###
+
+### 3.4 - ADD NOTE
+POST {{baseUrl}}/suppliers/{{supplierId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "Reunião realizada em 28/12/2024. Acordado novo desconto de 5% para pedidos acima de R$ 10.000."
+}
+
+###
+
+### 3.5 - ADD NOTE (PROBLEMA)
+POST {{baseUrl}}/suppliers/{{supplierId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "ATENÇÃO: Pedido #1234 chegou com 3 itens danificados. Solicitada troca."
+}
+
+###
+
+### 3.6 - ADD NOTE (FOLLOW-UP)
+POST {{baseUrl}}/suppliers/{{supplierId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "Follow-up: Troca realizada com sucesso. Problema resolvido."
+}
+
+###
+
+# ============================================
+# SEÇÃO 4: ESTATÍSTICAS E RELATÓRIOS
+# ============================================
+
+### 4.1 - GET STATISTICS
+GET {{baseUrl}}/suppliers/stats
+Authorization: Bearer {{token}}
+
+###
+
+### 4.2 - GET TOP RATED (TOP 10)
+GET {{baseUrl}}/suppliers/top-rated
+Authorization: Bearer {{token}}
+
+###
+
+### 4.3 - GET TOP RATED (TOP 5)
+GET {{baseUrl}}/suppliers/top-rated?limit=5
+Authorization: Bearer {{token}}
+
+###
+
+### 4.4 - GET TOP RATED (TOP 3)
+GET {{baseUrl}}/suppliers/top-rated?limit=3
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 5: WORKFLOWS COMPLETOS
+# ============================================
+
+### 5.1 - WORKFLOW COMPLETO - NOVO FORNECEDOR
+# Passo 1: Criar fornecedor
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "ABC Materiais de Construção",
+  "taxId": "98.765.432/0001-10",
+  "email": "vendas@abcmateriais.com.br",
+  "phone": "+55 11 4000-1234",
+  "city": "Guarulhos",
+  "state": "SP",
+  "paymentTerms": "28 dias",
+  "deliveryTime": 7
+}
+
+###
+
+# Passo 2: Fazer primeira compra e avaliar
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 5,
+  "notes": "Primeira compra realizada com sucesso. Entrega rápida e produtos conforme especificado."
+}
+
+###
+
+# Passo 3: Adicionar nota sobre negociação
+POST {{baseUrl}}/suppliers/{{supplierId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "Negociado desconto de 10% para pedidos mensais acima de R$ 5.000."
+}
+
+###
+
+# Passo 4: Ver detalhes atualizados
+GET {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 5.2 - WORKFLOW - PROBLEMA COM FORNECEDOR
+# Passo 1: Adicionar nota sobre problema
+POST {{baseUrl}}/suppliers/{{supplierId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "PROBLEMA: Pedido #5678 atrasou 10 dias. Cliente final insatisfeito."
+}
+
+###
+
+# Passo 2: Rebaixar rating
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 2,
+  "notes": "Múltiplos atrasos e falta de comunicação. Avaliar se continuamos trabalhando."
+}
+
+###
+
+# Passo 3: Desativar temporariamente
+POST {{baseUrl}}/suppliers/{{supplierId}}/deactivate
+Authorization: Bearer {{token}}
+
+###
+
+# Passo 4: Verificar lista de ativos (não deve aparecer)
+GET {{baseUrl}}/suppliers?isActive=true
+Authorization: Bearer {{token}}
+
+###
+
+### 5.3 - WORKFLOW - REATIVAÇÃO APÓS MELHORIA
+# Passo 1: Reativar fornecedor
+POST {{baseUrl}}/suppliers/{{supplierId}}/activate
+Authorization: Bearer {{token}}
+
+###
+
+# Passo 2: Adicionar nota de follow-up
+POST {{baseUrl}}/suppliers/{{supplierId}}/note
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "note": "Reunião com gerência do fornecedor. Comprometeram-se a melhorar prazos e comunicação."
+}
+
+###
+
+# Passo 3: Nova avaliação após período de teste
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "notes": "Melhora significativa! Últimos 3 pedidos entregues no prazo."
+}
+
+###
+
+# ============================================
+# SEÇÃO 6: CASOS DE USO REAIS
+# ============================================
+
+### 6.1 - CASO 1: Fornecedor de TI
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Dell Brasil",
+  "legalName": "Dell Computadores do Brasil LTDA",
+  "taxId": "11.222.333/0001-44",
+  "email": "b2b@dell.com.br",
+  "phone": "+55 11 4004-3555",
+  "website": "https://www.dell.com.br",
+  "city": "São Paulo",
+  "state": "SP",
+  "country": "Brasil",
+  "contactPerson": "Carlos Eduardo",
+  "contactEmail": "carlos.eduardo@dell.com.br",
+  "paymentTerms": "45 dias",
+  "deliveryTime": 20,
+  "rating": 5,
+  "notes": "Fornecedor Premium. Notebooks e servidores corporativos."
+}
+
+###
+
+### 6.2 - CASO 2: Fornecedor de Papelaria
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Kalunga",
+  "email": "atacado@kalunga.com.br",
+  "phone": "+55 11 3003-5555",
+  "website": "https://www.kalunga.com.br",
+  "city": "São Paulo",
+  "state": "SP",
+  "paymentTerms": "14 dias",
+  "deliveryTime": 3,
+  "rating": 4
+}
+
+###
+
+### 6.3 - CASO 3: Fornecedor de Limpeza
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Clean Service Produtos de Limpeza",
+  "taxId": "55.666.777/0001-88",
+  "email": "vendas@cleanservice.com.br",
+  "phone": "+55 11 2500-8888",
+  "address": "Rua da Limpeza, 500",
+  "city": "São Paulo",
+  "state": "SP",
+  "paymentTerms": "21 dias",
+  "deliveryTime": 5,
+  "rating": 3,
+  "notes": "Produtos de limpeza profissional. Preços competitivos."
+}
+
+###
+
+### 6.4 - CASO 4: Fornecedor Internacional
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Amazon Web Services",
+  "legalName": "Amazon Web Services Inc",
+  "email": "aws-support@amazon.com",
+  "website": "https://aws.amazon.com",
+  "city": "Seattle",
+  "state": "WA",
+  "country": "USA",
+  "paymentTerms": "Net 30",
+  "deliveryTime": 1,
+  "rating": 5,
+  "notes": "Cloud infrastructure. Serviços de infraestrutura em nuvem."
+}
+
+###
+
+# ============================================
+# SEÇÃO 7: TESTES DE ERRO (VALIDAÇÕES)
+# ============================================
+
+### 7.1 - ERRO: Criar sem nome
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "teste@teste.com"
+}
+
+# Esperado: Erro de validação
+
+###
+
+### 7.2 - ERRO: Email inválido
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Teste",
+  "email": "email-invalido"
+}
+
+# Esperado: Erro de validação
+
+###
+
+### 7.3 - ERRO: Website inválido
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Teste",
+  "website": "nao-e-url"
+}
+
+# Esperado: Erro de validação
+
+###
+
+### 7.4 - ERRO: Rating fora da escala
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": 10
+}
+
+# Esperado: "Rating must be between 1 and 5"
+
+###
+
+### 7.5 - ERRO: Rating negativo
+POST {{baseUrl}}/suppliers/{{supplierId}}/rating
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "rating": -1
+}
+
+# Esperado: Erro de validação
+
+###
+
+### 7.6 - ERRO: Tax ID duplicado
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Duplicado",
+  "taxId": "12.345.678/0001-90"
+}
+
+# Esperado: "Supplier with tax ID already exists"
+
+###
+
+### 7.7 - ERRO: Atualizar para Tax ID duplicado
+PATCH {{baseUrl}}/suppliers/{{supplierId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "taxId": "98.765.432/0001-10"
+}
+
+# Esperado: "Supplier with tax ID already exists" (se já existe)
+
+###
+
+### 7.8 - ERRO: Supplier não existe
+GET {{baseUrl}}/suppliers/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+# Esperado: 404 "Supplier not found"
+
+###
+
+### 7.9 - ERRO: Tax ID não existe
+GET {{baseUrl}}/suppliers/taxid/99.999.999/9999-99
+Authorization: Bearer {{token}}
+ 
+# Esperado: 404 "Supplier not found with this tax ID"
+
+###
+
+### 7.10 - ERRO: Sem autenticação
+GET {{baseUrl}}/suppliers
+
+# Esperado: 401 Unauthorized
+
+###
+
+# ============================================
+# SEÇÃO 8: PERFORMANCE E BULK
+# ============================================
+
+### 8.1 - Criar múltiplos suppliers (bulk)
+POST {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Supplier Bulk Test {{$timestamp}}",
+  "email": "test-{{$timestamp}}@example.com",
+  "city": "São Paulo",
+  "rating": 4
+}
+
+###
+
+### 8.2 - Listar todos
+GET {{baseUrl}}/suppliers
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# SEÇÃO 9: MANUTENÇÃO E RELATÓRIOS
+# ============================================
+
+### 9.1 - Estatísticas completas
+GET {{baseUrl}}/suppliers/stats
+Authorization: Bearer {{token}}
+
+###
+
+### 9.2 - Top 10 fornecedores
+GET {{baseUrl}}/suppliers/top-rated
+Authorization: Bearer {{token}}
+
+###
+
+### 9.3 - Fornecedores ativos
+GET {{baseUrl}}/suppliers?isActive=true
+Authorization: Bearer {{token}}
+
+###
+
+### 9.4 - Fornecedores inativos
+GET {{baseUrl}}/suppliers?isActive=false
+Authorization: Bearer {{token}}
+
+###
+
+### 9.5 - Fornecedores 5 estrelas
+GET {{baseUrl}}/suppliers?minRating=5
+Authorization: Bearer {{token}}
+
+###
+
+### 9.6 - Fornecedores 4+ estrelas
+GET {{baseUrl}}/suppliers?minRating=4
+Authorization: Bearer {{token}}
+
+###
+
+# ============================================
+# FIM DOS TESTES
+# ============================================
